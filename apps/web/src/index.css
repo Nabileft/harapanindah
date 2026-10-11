@@ -1,0 +1,145 @@
+@import 'tailwindcss';
+
+/* Warna diambil dari foto: langit malam, pasir pantai, dan putih kena flash. */
+@theme static {
+  --color-night: #0c1622;
+  --color-deep: #040d1c;
+  --color-flash: #f4f3ee;
+  --color-sand: #d6cdb0;
+
+  --color-muted: rgb(214 205 176 / 0.72);
+
+  /* Huruf semua teks, mirip huruf situs A24 (NB International). */
+  --font-sans: 'Inter Tight Variable', 'Helvetica Neue', Arial, sans-serif;
+  /* Khusus judul tongkrongan di foto header: tinggi dan tebal. */
+  --font-display: 'League Gothic Variable', 'Arial Narrow', sans-serif;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-pop: cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background-color: var(--color-night);
+  }
+
+  body {
+    min-height: 100svh;
+    background-color: var(--color-night);
+    color: var(--color-flash);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Komponen kecil yang dipakai bersama di beberapa section. */
+@layer components {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.7rem 1.25rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      border-color 0.2s,
+      opacity 0.2s;
+  }
+
+  .button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .button:focus-visible,
+  .icon-button:focus-visible {
+    outline: 2px solid var(--color-sand);
+    outline-offset: 3px;
+  }
+
+  .button-primary {
+    background: var(--color-flash);
+    color: var(--color-deep);
+  }
+
+  .button-primary:not(:disabled):hover {
+    background: #ffffff;
+  }
+
+  .button-quiet {
+    border-color: rgb(244 243 238 / 0.22);
+    background: transparent;
+    color: var(--color-flash);
+  }
+
+  .button-quiet:not(:disabled):hover {
+    border-color: rgb(244 243 238 / 0.5);
+  }
+
+  .button-danger {
+    background: #c8483d;
+    color: #ffffff;
+  }
+
+  .button-danger:not(:disabled):hover {
+    background: #d6554a;
+  }
+
+  .button-small {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8125rem;
+  }
+
+  .icon-button {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(4 13 28 / 0.72);
+    color: var(--color-flash);
+    font-size: 1.125rem;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+  }
+
+  .icon-button:hover {
+    background: rgb(4 13 28 / 0.92);
+  }
+
+  .chip {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: rgb(214 205 176 / 0.16);
+    color: var(--color-sand);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  /* Teks yang berbeda untuk mouse ("Klik") dan layar sentuh ("Ketuk"). */
+  .when-touch {
+    display: none;
+  }
+
+  @media (hover: none) {
+    .when-hover {
+      display: none;
+    }
+    .when-touch {
+      display: inline;
+    }
+  }
+}

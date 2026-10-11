@@ -1,0 +1,21 @@
+/* Sapaan di paling atas halaman, di tengah, di atas langit foto header. */
+.sapaan {
+  position: absolute;
+  top: clamp(1rem, 3vh, 1.75rem);
+  left: 50%;
+  z-index: 2;
+  translate: -50% 0;
+  margin: 0;
+  max-width: calc(100% - 2rem);
+  overflow: hidden;
+  color: var(--color-sand);
+  font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+  font-weight: 400;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sapaan-nama {
+  color: var(--color-flash);
+}

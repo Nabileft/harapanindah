@@ -1,0 +1,245 @@
+/*
+  Daftar fitur ala daftar film A24: judul besar rapat, label kecil di kanan atas judul,
+  gambar pratinjau diam di sisi kanan, isi fitur terbuka perlahan di bawah judulnya.
+*/
+
+.fitur {
+  /* 44px di HP kecil, sekitar 48px di HP biasa, sampai 136px di layar lebar. */
+  --judul: clamp(2.75rem, 1.2rem + 7.4vw, 8.5rem);
+  --tepi: clamp(1rem, 4vw, 3rem);
+  --jarak: clamp(3rem, 8vw, 6rem);
+  --pratinjau-lebar: clamp(15rem, 30vw, 30rem);
+  --pratinjau-tinggi: calc(var(--pratinjau-lebar) * 3 / 4);
+  /* --laci (lama animasi buka/tutup) diisi dari DaftarFitur.tsx. */
+  --ease-laci: cubic-bezier(0.65, 0, 0.35, 1);
+
+  position: relative;
+  max-width: 88rem;
+  margin-inline: auto;
+  padding: var(--jarak) var(--tepi);
+  overflow-x: clip;
+}
+
+/* ---------- Pratinjau di sisi kanan ---------- */
+
+/* Judul-judul fitur. Kolom gambar pratinjau diukur dari sini, jadi sejajar judul pertama. */
+.fitur-daftar {
+  position: relative;
+}
+
+/* Kolom kanan setinggi daftar. Gambarnya sejajar judul pertama, dan saat ada fitur yang terbuka
+   ia ikut turun di tengah layar (sticky) supaya tetap terlihat saat judul lain di-hover. */
+.fitur-rel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: calc(var(--jarak) * -1);
+  z-index: 3;
+  width: var(--pratinjau-lebar);
+  pointer-events: none;
+}
+
+.fitur-pratinjau {
+  position: sticky;
+  top: calc(50vh - var(--pratinjau-tinggi) / 2);
+  height: var(--pratinjau-tinggi);
+}
+
+.pratinjau-item {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.35s var(--ease-soft);
+}
+
+.pratinjau-item[data-aktif='true'] {
+  opacity: 1;
+}
+
+.pratinjau-item > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Gambar sedikit membesar lalu diam, pelan sekali, supaya munculnya terasa lembut. */
+.pratinjau-item > * {
+  scale: 1.04;
+  transition: scale 1.2s var(--ease-soft);
+}
+
+.pratinjau-item[data-aktif='true'] > * {
+  scale: 1;
+}
+
+/* ---------- Judul ---------- */
+
+.fitur-baris {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.fitur-heading {
+  min-width: 0;
+  margin: 0;
+  font: inherit;
+}
+
+/* Selebar tulisannya saja: hover dan klik hanya terjadi kalau kursor benar-benar di tulisan. */
+.fitur-toggle {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-width: 100%;
+  /* Ruang untuk ekor huruf (j, g) supaya tidak terpotong. */
+  padding: 0 0 calc(var(--judul) * 0.08);
+  border: 0;
+  background: none;
+  color: var(--color-flash);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.3s var(--ease-soft);
+}
+
+/* Tipis seperti daftar film A24. Teks terang di latar gelap terlihat lebih tebal, jadi dibuat sedikit lebih tipis dari 400. */
+.fitur-judul {
+  font-size: var(--judul);
+  font-weight: 350;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+}
+
+/* Label kecil sejajar puncak huruf kapital judul. */
+.fitur-label,
+.fitur-tutup {
+  padding-top: calc(var(--judul) * 0.16);
+  font-size: clamp(0.8125rem, 1.1vw, 1.0625rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Seperti A24: judul yang sedang di-hover memudar. */
+.fitur-item[data-disorot='true'] .fitur-toggle {
+  color: color-mix(in srgb, var(--color-flash) 42%, var(--color-night));
+}
+
+.fitur-toggle:focus-visible {
+  outline: none;
+}
+
+.fitur-toggle:focus-visible .fitur-judul {
+  text-decoration: underline;
+  text-decoration-thickness: 0.05em;
+  text-underline-offset: 0.1em;
+}
+
+.fitur-tutup {
+  margin-left: auto;
+  padding-inline: 0;
+  padding-bottom: 0.5rem;
+  border: 0;
+  background: none;
+  color: var(--color-flash);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.3s var(--ease-soft),
+    color 0.2s;
+}
+
+.fitur-item[data-open='true'] .fitur-tutup {
+  opacity: 1;
+  transition-delay: 0.2s, 0s;
+}
+
+.fitur-tutup:hover {
+  color: color-mix(in srgb, var(--color-flash) 55%, var(--color-night));
+}
+
+.fitur-tutup:focus-visible {
+  outline: 2px solid var(--color-sand);
+  outline-offset: 4px;
+}
+
+/* ---------- Isi fitur (laci) ---------- */
+
+/* Tingginya dianimasikan dari 0 ke tinggi isinya (dan sebaliknya) lewat baris grid 0fr -> 1fr. */
+.fitur-laci {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--laci) var(--ease-laci);
+}
+
+.fitur-laci[data-open='true'] {
+  grid-template-rows: 1fr;
+}
+
+.fitur-isi {
+  min-height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  /* Disembunyikan penuh setelah animasi menutup selesai. */
+  transition: visibility 0s linear var(--laci);
+}
+
+.fitur-laci[data-open='true'] .fitur-isi {
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* Setelah terbuka penuh, isinya tidak dipotong lagi (misalnya garis fokus di tepi). */
+.fitur-laci[data-tenang='true'] .fitur-isi {
+  overflow: visible;
+}
+
+.fitur-isi-dalam {
+  padding-top: clamp(1rem, 2vw, 1.5rem);
+  opacity: 0;
+  translate: 0 -1.5rem;
+  /* Saat menutup: isinya ikut terlipat ke atas sambil memudar. */
+  transition:
+    opacity calc(var(--laci) * 0.7) var(--ease-laci),
+    translate var(--laci) var(--ease-laci);
+}
+
+.fitur-laci[data-open='true'] .fitur-isi-dalam {
+  opacity: 1;
+  translate: none;
+  transition:
+    opacity 0.6s var(--ease-soft) 0.15s,
+    translate var(--laci) var(--ease-laci);
+}
+
+/* ---------- Layar sentuh, layar kecil, gerak dikurangi ---------- */
+
+@media (hover: none) {
+  .fitur-rel {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Judul, label, dan "Tutup" tidak muat sebaris; ketuk judulnya untuk menutup. */
+  .fitur-tutup {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fitur-toggle,
+  .fitur-tutup,
+  .pratinjau-item,
+  .pratinjau-item > *,
+  .fitur-laci,
+  .fitur-isi,
+  .fitur-isi-dalam {
+    transition: none;
+  }
+}

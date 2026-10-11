@@ -1,0 +1,266 @@
+/*
+  Header dashboard: foto tongkrongan yang bisa di-hover.
+
+  Susunan lapisan (bawah ke atas):
+  1. .hero-frame (pertama)  foto, judul, lalu potongan tiap orang. Potongannya pas menimpa
+                            foto, jadi judul terlihat ada di belakang kepala.
+  2. .hero-shade            lapisan gelap yang muncul saat ada orang di-hover
+  3. .hero-pop              salinan orang yang di-hover: terang, membesar, ada bayangan
+  4. .hero-bottom-fade      pudar di bagian bawah header
+  5. .hero-overlay          label nama + area hover (SVG)
+
+  Ada dua tampilan, dipilih lewat prop `layout` di DashboardPage.tsx:
+  "fullscreen" (foto memenuhi layar) dan "framed" (foto utuh di tengah).
+
+  Semua lapisan .hero-frame berukuran sama dengan foto, jadi posisi di dalamnya
+  cukup pakai persen dari ukuran foto asli (1200 x 1600).
+*/
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  container: hero / size;
+  /* Warna langit paling atas di foto, supaya langit bisa "diteruskan" ke atas di HP. */
+  background: var(--color-deep);
+  color: var(--color-flash);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  /* Panjang pudar di bawah header, dipakai beberapa lapisan. */
+  --bottom-fade: clamp(3rem, 16cqh, 9rem);
+}
+
+/* Bingkai seukuran foto (3:4). Semua lapisan foto, judul, orang, dan label ada di dalamnya. */
+.hero-frame {
+  position: absolute;
+  left: 50%;
+  width: var(--w);
+  aspect-ratio: 3 / 4;
+  translate: -50% 0;
+  container-type: inline-size;
+  transition: opacity 0.7s ease;
+}
+
+/* ---------- Tampilan layar penuh (layout="fullscreen") ----------
+   Foto selebar layar. Di laptop fotonya jadi lebih tinggi dari layar, jadi bagian bawahnya
+   (kaki) yang terpotong, sementara judul dan kepala dijaga tetap terlihat.
+   Di HP foto menempel di bawah, dan langit di atasnya diteruskan dengan warna latar. */
+
+.hero[data-layout='fullscreen'] .hero-frame {
+  --w: 100cqw;
+  --photo-h: calc(100cqw * 4 / 3);
+  /* Ukuran dan letak atas judul, dihitung sama seperti di .hero-title. */
+  --title-size: min(100cqw * 0.84 / var(--title-em), 100cqw * 0.2);
+  --title-top: calc(var(--photo-h) * 0.61 - var(--title-size) * 0.62);
+  /* Jarak dari atas layar ke atas judul. */
+  --space-top: clamp(2rem, 10cqh, 7rem);
+  top: max(100cqh - var(--photo-h), var(--space-top) - var(--title-top));
+}
+
+/* Tepi atas foto memudar ke warna langit (hanya kelihatan di HP). */
+.hero[data-layout='fullscreen'] .hero-fade {
+  mask-image: linear-gradient(to bottom, transparent, #000 12%);
+}
+
+/* Bagian bawah header memudar ke warna halaman, supaya menyatu dengan konten di bawahnya nanti. */
+.hero-bottom-fade {
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--bottom-fade);
+  background: linear-gradient(to top, var(--color-night), transparent);
+  pointer-events: none;
+}
+
+/* ---------- Tampilan bingkai (layout="framed") ----------
+   Foto tampil utuh di tengah, menempel di bawah. Di layar lebar tepi kiri-kanannya
+   memudar ke warna latar. */
+
+.hero[data-layout='framed'] {
+  /* Setinggi layar, tapi tidak lebih tinggi dari foto utuhnya (rasio 3:4). */
+  height: min(100svh, 133.333vw, 68rem);
+  background: var(--color-night);
+}
+
+.hero[data-layout='framed'] .hero-frame {
+  --w: min(100cqw, 133.333cqh);
+  bottom: 0;
+}
+
+.hero[data-layout='framed'] .hero-fade {
+  --side-fade: clamp(0px, (100cqw - var(--w)) / 2, var(--w) * 0.065);
+  mask-image:
+    linear-gradient(to right, transparent, #000 var(--side-fade), #000 calc(100% - var(--side-fade)), transparent),
+    linear-gradient(to top, transparent, #000 var(--bottom-fade));
+  mask-composite: intersect;
+}
+
+.hero[data-layout='framed'] .hero-bottom-fade {
+  display: none;
+}
+
+.hero[data-ready='false'] .hero-frame {
+  opacity: 0;
+}
+
+.hero-photo,
+.hero-person {
+  position: absolute;
+  display: block;
+  max-width: none;
+  -webkit-user-drag: none;
+}
+
+.hero-photo {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Judul ---------- */
+
+/* Kalau ukuran atau posisi judul diubah, sesuaikan juga --title-size dan --title-top
+   di bagian "Tampilan layar penuh" di atas. */
+.hero-title {
+  position: absolute;
+  left: 50%;
+  /* Bagian bawah huruf tertutup kepala: garis kepala ada di ~39% dari bawah foto. */
+  bottom: calc(39% - 0.18em);
+  translate: -50% 0;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-synthesis: none;
+  /* Selebar rombongan (84% foto), tapi tidak kebesaran kalau namanya pendek. */
+  font-size: min(100cqw * 0.84 / var(--title-em), 100cqw * 0.2);
+  line-height: 0.8;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-flash);
+  transition: opacity 0.35s var(--ease-soft);
+}
+
+.hero-title span {
+  display: inline-block;
+}
+
+/* Saat ada yang di-hover, judul tidak hilang: ia ikut diredupkan lapisan gelap.
+   Mau lebih samar? Turunkan opacity-nya (1 = hanya diredupkan, 0 = hilang). */
+.hero[data-active='true'] .hero-title {
+  opacity: 0.25;
+}
+
+/* ---------- Saat ada yang di-hover ---------- */
+
+.hero-shade {
+  position: absolute;
+  inset: 0;
+  background: rgb(2 5 10 / 0.66);
+  mask-image: linear-gradient(to top, transparent, #000 var(--bottom-fade));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s var(--ease-soft);
+}
+
+.hero[data-active='true'] .hero-shade {
+  opacity: 1;
+}
+
+.hero-pop .hero-person {
+  transform-origin: 50% 100%;
+  opacity: 0;
+  /* Daftar filter sama di kedua keadaan supaya transisinya mulus. */
+  filter: brightness(1) drop-shadow(0 0 0 transparent);
+  transition:
+    opacity 0.3s var(--ease-soft),
+    transform 0.4s var(--ease-soft),
+    filter 0.4s var(--ease-soft);
+}
+
+.hero-pop .hero-person[data-active='true'] {
+  opacity: 1;
+  transform: scale(var(--pop-scale));
+  filter: brightness(1.05) drop-shadow(0 1.2cqw 2.2cqw rgb(0 0 0 / 0.6));
+  transition:
+    opacity 0.2s var(--ease-soft),
+    transform 0.6s var(--ease-pop),
+    filter 0.45s var(--ease-soft);
+}
+
+/* ---------- Label nama ---------- */
+
+.hero-label {
+  --label-w: clamp(9rem, 30cqw, 15rem);
+  position: absolute;
+  /* Di atas kepala, tapi tidak keluar dari tepi foto. */
+  left: clamp(var(--label-w) / 2 + 0.75rem, var(--x) * 100%, 100% - var(--label-w) / 2 - 0.75rem);
+  bottom: calc((1 - var(--y)) * 100% + clamp(0.375rem, 1cqw, 0.875rem));
+  width: var(--label-w);
+  translate: -50% 0.5rem;
+  opacity: 0;
+  text-align: center;
+  /* Bayangan tipis supaya label tetap terbaca di atas judul yang meredup. */
+  text-shadow:
+    0 0 1.5rem rgb(2 5 10 / 0.9),
+    0 1px 3px rgb(2 5 10 / 0.8);
+  pointer-events: none;
+  transition:
+    opacity 0.2s var(--ease-soft),
+    translate 0.35s var(--ease-soft);
+}
+
+.hero-label[data-visible='true'] {
+  opacity: 1;
+  translate: -50% 0;
+  transition-delay: 0.08s;
+}
+
+.hero-label-name {
+  margin: 0;
+  font-weight: 350;
+  font-size: clamp(1.5rem, 4cqw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--color-flash);
+}
+
+.hero-label-note {
+  margin: 0.45em 0 0;
+  font-size: clamp(0.8125rem, 1.35cqw, 1rem);
+  line-height: 1.4;
+  color: var(--color-sand);
+  text-wrap: balance;
+}
+
+/* ---------- Area hover ---------- */
+
+.hero-hit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.hero-hit path {
+  fill: transparent;
+  pointer-events: all;
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-pop .hero-person[data-active='true'] {
+    transform: none;
+  }
+  .hero-label,
+  .hero-label[data-visible='true'] {
+    translate: -50% 0;
+  }
+  .hero,
+  .hero * {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+}

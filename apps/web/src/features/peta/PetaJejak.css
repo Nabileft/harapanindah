@@ -1,0 +1,1130 @@
+/*
+  Isi fitur "Jejak Kita": peta malam dengan foto-foto kenangan tertancap di lokasinya.
+  Susunan: kalimat pembuka + tombol, panggung peta (peta + panel detail/form), lalu folder kota.
+*/
+
+.peta {
+  --muted: var(--color-muted);
+  --hairline: rgb(244 243 238 / 0.1);
+  --panel-bg: rgb(10 19 31 / 0.94);
+  --panel-space: 0px;
+
+  padding-block: 0.5rem clamp(3rem, 6vw, 5rem);
+}
+
+.peta-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+  margin-bottom: clamp(1.25rem, 3vw, 2rem);
+}
+
+.peta-lede {
+  margin: 0;
+  max-width: 36rem;
+  font-size: clamp(0.95rem, 1.2vw, 1.0625rem);
+  line-height: 1.55;
+  color: var(--color-sand);
+  text-wrap: pretty;
+}
+
+/* ---------- Panggung peta ---------- */
+
+.peta-stage {
+  position: relative;
+  isolation: isolate;
+  height: clamp(28rem, 74svh, 48rem);
+  overflow: hidden;
+  border-radius: 18px;
+  background: #101d2c;
+}
+
+/* Garis tepi + bayangan sudut, di atas peta tapi tidak menghalangi klik. */
+.peta-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px var(--hairline),
+    inset 0 0 90px rgb(4 13 28 / 0.55);
+  pointer-events: none;
+}
+
+/* Selektor dua tingkat supaya menang dari CSS bawaan MapLibre (.maplibregl-map). */
+.peta-stage .map-canvas {
+  position: absolute;
+  inset: 0;
+  font: inherit;
+}
+
+.map-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.map-button {
+  position: absolute;
+  z-index: 2;
+  padding: 0.5rem 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(4 13 28 / 0.8);
+  box-shadow: inset 0 0 0 1px rgb(244 243 238 / 0.14);
+  color: var(--color-flash);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+.map-button:hover {
+  background: rgb(4 13 28 / 0.95);
+}
+
+.map-fit {
+  top: 14px;
+  left: 14px;
+}
+
+.map-hint {
+  position: absolute;
+  z-index: 2;
+  top: 14px;
+  left: calc((100% - var(--panel-space)) / 2);
+  translate: -50% 0;
+  margin: 0;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  background: var(--color-flash);
+  color: var(--color-deep);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.4);
+  pointer-events: none;
+}
+
+.map-message {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: min(22rem, calc(100% - 2rem));
+  height: fit-content;
+  margin: auto;
+  padding: 1.25rem;
+  border-radius: 14px;
+  background: var(--panel-bg);
+  color: var(--color-flash);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.peta-empty {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: min(22rem, calc(100% - 2rem));
+  height: fit-content;
+  margin: auto;
+  padding: 1.5rem;
+  border-radius: 14px;
+  background: var(--panel-bg);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  color: var(--muted);
+  text-align: center;
+}
+
+.peta-empty p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.peta-empty .button {
+  margin-top: 0.5rem;
+}
+
+.peta-empty-title {
+  color: var(--color-flash);
+  font-weight: 500;
+}
+
+/* Saat menambah kenangan: kursor jadi tanda tambah, pin lain meredup dan tidak bisa diklik. */
+.peta-stage[data-mode='add'] .maplibregl-canvas-container.maplibregl-interactive {
+  cursor: crosshair;
+}
+
+.peta-stage[data-mode='add'] .pin:not(.pin-draft) {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* ---------- Kontrol bawaan MapLibre, disesuaikan dengan tema malam ---------- */
+
+.peta-stage .maplibregl-ctrl.maplibregl-ctrl-group:not(:empty) {
+  overflow: hidden;
+  border-radius: 10px;
+  background: rgb(4 13 28 / 0.8);
+  box-shadow: inset 0 0 0 1px rgb(244 243 238 / 0.14);
+  backdrop-filter: blur(6px);
+}
+
+.peta-stage .maplibregl-ctrl-group button {
+  width: 34px;
+  height: 34px;
+}
+
+.peta-stage .maplibregl-ctrl-group button + button {
+  border-top: 1px solid rgb(244 243 238 / 0.12);
+}
+
+.peta-stage .maplibregl-ctrl-group button:not(:disabled):hover {
+  background-color: rgb(244 243 238 / 0.08);
+}
+
+.peta-stage .maplibregl-ctrl button .maplibregl-ctrl-icon,
+.peta-stage .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+
+.peta-stage .maplibregl-ctrl-group button:focus {
+  box-shadow: none;
+}
+
+.peta-stage .maplibregl-ctrl-group button:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--color-sand);
+}
+
+.peta-stage .maplibregl-ctrl.maplibregl-ctrl-attrib,
+.peta-stage .maplibregl-ctrl-attrib.maplibregl-compact {
+  background: rgb(4 13 28 / 0.75);
+  color: rgb(214 205 176 / 0.8);
+  font-size: 11px;
+}
+
+.peta-stage .maplibregl-ctrl-attrib a {
+  color: inherit;
+}
+
+.peta-stage .maplibregl-ctrl-attrib-button:focus {
+  box-shadow: none;
+}
+
+.peta-stage .maplibregl-cooperative-gesture-screen {
+  background: rgb(4 13 28 / 0.6);
+  color: var(--color-flash);
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  font-weight: 500;
+}
+
+/* Pin yang di-hover atau dipilih selalu di atas pin lain. */
+.peta-stage .maplibregl-marker:hover,
+.peta-stage .maplibregl-marker:focus-within {
+  z-index: 10 !important;
+}
+
+/* ---------- Pin foto di peta ---------- */
+
+.pin {
+  --size: 52px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pin:focus-visible {
+  outline: none;
+}
+
+/* Foto seperti cetakan kena flash, ditempel agak miring. */
+.pin-photo {
+  position: relative;
+  display: block;
+  rotate: var(--tilt, 0deg);
+  transform-origin: 50% 100%;
+  transition:
+    rotate 0.3s var(--ease-soft),
+    scale 0.4s var(--ease-pop);
+}
+
+/* Lebih dari satu foto: ada cetakan lain di belakangnya. */
+.pin-photo[data-stack]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 3px;
+  background: #cfcabb;
+  rotate: 9deg;
+  box-shadow: 0 6px 14px rgb(0 0 0 / 0.45);
+}
+
+.pin-print {
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  padding: 3px;
+  border-radius: 3px;
+  background: var(--color-flash);
+  box-shadow: 0 8px 18px rgb(0 0 0 / 0.55);
+  transition: box-shadow 0.3s var(--ease-soft);
+}
+
+.pin-print img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 1px;
+  object-fit: cover;
+  background: #1a2636;
+}
+
+.pin-stem {
+  position: relative;
+  display: block;
+  width: 2px;
+  height: 12px;
+  margin-bottom: 8px;
+  background: linear-gradient(var(--color-flash), rgb(244 243 238 / 0.45));
+}
+
+/* Titik lokasi yang sebenarnya. */
+.pin-stem::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 8px;
+  height: 8px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: var(--color-flash);
+  box-shadow: 0 0 0 3px rgb(244 243 238 / 0.22);
+}
+
+.pin-label {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  max-width: 14rem;
+  padding: 0.3rem 0.65rem;
+  overflow: hidden;
+  translate: -50% 4px;
+  border-radius: 999px;
+  background: rgb(4 13 28 / 0.9);
+  color: var(--color-flash);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s var(--ease-soft),
+    translate 0.25s var(--ease-soft);
+}
+
+.pin:hover .pin-photo,
+.pin:focus-visible .pin-photo {
+  rotate: 0deg;
+  scale: 1.1;
+}
+
+.pin:hover .pin-label,
+.pin:focus-visible .pin-label {
+  opacity: 1;
+  translate: -50% 0;
+}
+
+.pin:focus-visible .pin-print {
+  box-shadow:
+    0 0 0 2px var(--color-deep),
+    0 0 0 4px var(--color-sand);
+}
+
+.pin[aria-pressed='true'] .pin-photo {
+  rotate: 0deg;
+  scale: 1.28;
+}
+
+.pin[aria-pressed='true'] .pin-print {
+  box-shadow:
+    0 0 0 2px var(--color-sand),
+    0 14px 30px rgb(0 0 0 / 0.6);
+}
+
+.pin[aria-pressed='true'] .pin-label {
+  opacity: 0;
+}
+
+/* Pin kenangan baru yang belum disimpan. */
+.pin-draft {
+  cursor: default;
+  pointer-events: none;
+}
+
+.pin-draft .pin-print {
+  background: var(--color-sand);
+}
+
+.pin-draft .pin-stem::after {
+  background: var(--color-sand);
+  animation: pin-pulse 1.6s ease-out infinite;
+}
+
+.pin-draft:not(:has(.pin-photo)) .pin-stem {
+  height: 0;
+  background: none;
+}
+
+.pin-draft:not(:has(.pin-photo)) .pin-stem::after {
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes pin-pulse {
+  from {
+    box-shadow: 0 0 0 0 rgb(214 205 176 / 0.7);
+  }
+  to {
+    box-shadow: 0 0 0 16px rgb(214 205 176 / 0);
+  }
+}
+
+/* ---------- Panel (detail & form) ---------- */
+
+.panel {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--panel-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--hairline),
+    0 24px 60px rgb(0 0 0 / 0.45);
+  color: var(--color-flash);
+  backdrop-filter: blur(10px);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(244 243 238 / 0.2) transparent;
+  animation: panel-in 0.35s var(--ease-soft);
+}
+
+@media (min-width: 768px) {
+  .peta-stage[data-panel='true'] {
+    --panel-space: calc(min(380px, 45%) + 12px);
+  }
+
+  .panel {
+    top: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: min(380px, 45%);
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 767px) {
+  .peta-stage {
+    height: 74svh;
+    border-radius: 14px;
+  }
+
+  .panel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 62%;
+    border-radius: 16px 16px 0 0;
+    animation-name: sheet-in;
+  }
+
+  .pin {
+    --size: 44px;
+  }
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    translate: 16px 0;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+  }
+}
+
+.panel-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel-title {
+  margin: 0;
+  font-weight: 350;
+  font-size: clamp(1.625rem, 2.4vw, 2rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1.1rem 1.25rem 1.4rem;
+}
+
+/* Detail */
+
+.detail-photo {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--color-deep);
+  cursor: zoom-in;
+}
+
+.detail-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(52vh, 420px);
+  object-fit: cover;
+}
+
+.detail-photo-hint {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: rgb(4 13 28 / 0.75);
+  color: var(--color-flash);
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.detail-photo:hover .detail-photo-hint,
+.detail-photo:focus-visible .detail-photo-hint {
+  opacity: 1;
+}
+
+.detail-thumbs {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 1.25rem 0;
+  overflow-x: auto;
+  list-style: none;
+}
+
+.detail-thumbs button {
+  display: block;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: none;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.detail-thumbs button:hover,
+.detail-thumbs button[aria-pressed='true'] {
+  opacity: 1;
+}
+
+.detail-thumbs button[aria-pressed='true'] {
+  outline: 2px solid var(--color-sand);
+  outline-offset: -2px;
+}
+
+.detail-thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-date {
+  margin: 0;
+  color: var(--color-sand);
+  font-size: 0.875rem;
+}
+
+.detail-story {
+  margin: 0.35rem 0 0;
+  color: rgb(244 243 238 / 0.86);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.text-link {
+  margin-top: 0.35rem;
+  color: var(--color-sand);
+  font-size: 0.875rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.text-link:hover {
+  color: var(--color-flash);
+}
+
+.panel-body > .button-small {
+  margin-top: 0.75rem;
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 10px;
+  background: rgb(200 72 61 / 0.12);
+  box-shadow: inset 0 0 0 1px rgb(200 72 61 / 0.35);
+}
+
+.confirm p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Form */
+
+.panel-form {
+  gap: 1rem;
+  padding: 1.1rem 1.25rem 1.4rem;
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 1rem;
+  border: 1.5px dashed rgb(214 205 176 / 0.3);
+  border-radius: 12px;
+  background: rgb(214 205 176 / 0.04);
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+}
+
+.dropzone[data-dragging] {
+  border-color: var(--color-sand);
+  background: rgb(214 205 176 / 0.1);
+}
+
+.form-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.form-photos li {
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.form-photos img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.form-photo-remove {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(4 13 28 / 0.8);
+  color: var(--color-flash);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.form-photo-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 1.5px dashed rgb(214 205 176 / 0.35);
+  border-radius: 6px;
+  background: none;
+  color: var(--color-sand);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.form-photo-add svg {
+  font-size: 1.1rem;
+}
+
+.form-photo-add:hover {
+  border-color: var(--color-sand);
+}
+
+.spot-status {
+  position: relative;
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.spot-status::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--color-sand);
+}
+
+.spot-status[data-set='true']::before {
+  background: var(--color-sand);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  color: var(--color-sand);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.field-optional {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgb(244 243 238 / 0.14);
+  border-radius: 10px;
+  background: rgb(4 13 28 / 0.55);
+  color: var(--color-flash);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+.field textarea {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: rgb(214 205 176 / 0.45);
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: 2px solid var(--color-sand);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.form-error {
+  margin: 0;
+  color: #f2a79f;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.form-note {
+  margin: 0;
+  color: rgb(214 205 176 / 0.6);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ---------- Di bawah peta: folder per kota, atau isi satu folder ---------- */
+
+.peta-below {
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.peta-below .peta-strip {
+  margin-top: 0.9rem;
+}
+
+.peta-below-title {
+  margin: 0;
+  color: var(--color-flash);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+/* Folder kota, gaya album di Galeri iPhone: foto sampul persegi, nama, jumlah foto. */
+.folder-card {
+  display: flex;
+  flex-direction: column;
+  width: clamp(9.5rem, 42vw, 11.5rem);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-flash);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.folder-card:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.folder-card:focus-visible {
+  outline: none;
+}
+
+.folder-cover {
+  display: block;
+  margin-bottom: 0.5rem;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #16243a;
+}
+
+.folder-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.2s ease;
+}
+
+.folder-card:not(:disabled):hover .folder-cover img {
+  filter: brightness(1.1);
+}
+
+.folder-card:focus-visible .folder-cover {
+  outline: 2px solid var(--color-sand);
+  outline-offset: 3px;
+}
+
+.folder-name {
+  overflow: hidden;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.folder-count {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+
+.folder-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.folder-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+}
+
+.folder-head .button {
+  align-self: center;
+}
+
+.folder-head-title {
+  margin: 0;
+  font-weight: 350;
+  font-size: clamp(1.75rem, 3.2vw, 2.25rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+/* ---------- Kartu kenangan (isi folder) ---------- */
+
+.peta-strip {
+  position: relative;
+  display: flex;
+  overflow-anchor: none;
+  gap: 0.875rem;
+  margin: 1rem 0 0;
+  padding: 0.25rem 0.25rem 0.75rem;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(244 243 238 / 0.2) transparent;
+}
+
+.peta-strip > li {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.strip-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 12.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-flash);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.strip-card:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.strip-photo {
+  position: relative;
+  display: block;
+  margin-bottom: 0.45rem;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #13202f;
+}
+
+.strip-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 0.4s var(--ease-soft);
+}
+
+.strip-card:not(:disabled):hover .strip-photo img {
+  scale: 1.04;
+}
+
+.strip-card[aria-pressed='true'] .strip-photo {
+  outline: 2px solid var(--color-sand);
+  outline-offset: 2px;
+}
+
+.strip-card:focus-visible {
+  outline: none;
+}
+
+.strip-card:focus-visible .strip-photo {
+  outline: 2px solid var(--color-sand);
+  outline-offset: 2px;
+}
+
+.strip-title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.strip-date {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.strip-count {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgb(4 13 28 / 0.78);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.chip-on-photo {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgb(4 13 28 / 0.78);
+}
+
+/* ---------- Foto layar penuh ---------- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4.5rem 1rem 1.5rem;
+  background: rgb(4 13 28 / 0.95);
+  animation: fade-in 0.2s ease;
+}
+
+.lightbox-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+}
+
+.lightbox-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-flash);
+  font-weight: 350;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lightbox-count {
+  margin: 0;
+  color: var(--color-sand);
+  font-size: 0.875rem;
+}
+
+.lightbox-photo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(100%, 1400px);
+  max-height: calc(100dvh - 6rem);
+  border-radius: 4px;
+  object-fit: contain;
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.6);
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  width: 3rem;
+  height: 3rem;
+  translate: 0 -50%;
+  font-size: 1.4rem;
+}
+
+.lightbox-prev {
+  left: 1rem;
+}
+
+.lightbox-next {
+  right: 1rem;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peta *,
+  .lightbox,
+  .lightbox * {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}

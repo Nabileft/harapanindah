@@ -1,0 +1,426 @@
+/*
+  Fitur "Langganan": daftar langganan patungan dengan status bayar tiap anggota.
+  Semua teks memakai huruf yang sama dengan daftar fitur. Angka dibuat sama lebar (tabular)
+  supaya harga dan tanggal rapi saat disusun.
+*/
+
+.lg {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 2.5vw, 1.75rem);
+  padding-block: 0.5rem clamp(3rem, 6vw, 5rem);
+}
+
+.lg-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+}
+
+.lg-lede {
+  max-width: 36rem;
+  margin: 0;
+  color: var(--color-sand);
+  font-size: clamp(0.95rem, 1.2vw, 1.0625rem);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+/* ---------- Ringkasan ---------- */
+
+.lg-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem 2rem;
+  margin: 0;
+  padding-block: 1.1rem;
+  border-block: 1px solid rgb(244 243 238 / 0.12);
+}
+
+.lg-stats dt {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.lg-stats dd {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  font-weight: 350;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.lg-stat-note {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* ---------- Daftar ---------- */
+
+.lg-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lg-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.35rem 1.5rem;
+  padding-block: 1.25rem;
+  border-bottom: 1px solid rgb(244 243 238 / 0.1);
+}
+
+.lg-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  min-width: 0;
+}
+
+.lg-name {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.lg-dot {
+  flex: none;
+  width: 0.42em;
+  height: 0.42em;
+  border-radius: 50%;
+  background: var(--warna);
+}
+
+.lg-price {
+  align-self: center;
+  margin: 0;
+  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+  font-weight: 350;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.lg-price span {
+  color: var(--color-muted);
+  font-size: 0.8em;
+}
+
+.lg-meta {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lg-tempo[data-state='dekat'] {
+  color: #f0c36b;
+}
+
+.lg-tempo[data-state='telat'] {
+  color: #f2a79f;
+}
+
+.lg-tempo[data-state='lunas'] {
+  color: #8fd3a8;
+}
+
+.lg-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lg-row > .lg-members {
+  grid-column: 1;
+}
+
+.member {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid rgb(244 243 238 / 0.22);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-flash);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+
+button.member:not(:disabled):hover {
+  border-color: rgb(244 243 238 / 0.55);
+}
+
+.member:focus-visible {
+  outline: 2px solid var(--color-sand);
+  outline-offset: 2px;
+}
+
+.member[data-status='lunas'] {
+  border-color: var(--color-flash);
+  background: var(--color-flash);
+  color: var(--color-deep);
+}
+
+.member[data-status='telat'] {
+  border-color: rgb(242 167 159 / 0.6);
+  color: #f2a79f;
+}
+
+.member:disabled {
+  cursor: default;
+}
+
+.member-pemilik {
+  border-style: dashed;
+  color: var(--color-sand);
+  cursor: default;
+}
+
+.member-note {
+  color: inherit;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.lg-actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem 1rem;
+  align-self: end;
+}
+
+.lg-progress {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-button {
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  color: var(--color-flash);
+}
+
+.lg-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.lg-empty {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+/* ---------- Form ---------- */
+
+.lg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: clamp(1.1rem, 2.5vw, 1.6rem);
+  border-radius: 14px;
+  background: rgb(244 243 238 / 0.04);
+  box-shadow: inset 0 0 0 1px rgb(244 243 238 / 0.1);
+  animation: lg-in 0.3s var(--ease-soft);
+}
+
+.lg-form-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.lg-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 1rem;
+}
+
+.lg-form .field select,
+.lg-form .field input {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgb(244 243 238 / 0.14);
+  border-radius: 10px;
+  background: rgb(4 13 28 / 0.55);
+  color: var(--color-flash);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+.lg-form .field select:focus,
+.lg-form .field input:focus {
+  outline: 2px solid var(--color-sand);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.lg-money {
+  position: relative;
+  display: block;
+}
+
+.lg-money > span {
+  position: absolute;
+  top: 50%;
+  left: 0.8rem;
+  translate: 0 -50%;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  pointer-events: none;
+}
+
+.lg-form .lg-money input {
+  padding-left: 2.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lg-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.lg-fieldset .lg-members {
+  margin-top: 0.5rem;
+}
+
+.lg-form-summary {
+  margin: 0;
+  color: var(--color-sand);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes lg-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+/* ---------- Pratinjau (sampul) ---------- */
+
+/* Sampul dibuat dari warna layanan: gradasi lembut, nama besar, keterangan kecil. */
+.sampul {
+  --warna: var(--color-sand);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  padding: clamp(1rem, 1.8vw, 1.5rem);
+  color: #fff;
+  background:
+    radial-gradient(70% 85% at 10% 0%, color-mix(in srgb, var(--warna) 55%, #ffd1dc) 0%, transparent 72%),
+    radial-gradient(65% 75% at 95% 20%, color-mix(in srgb, var(--warna) 60%, #6d28d9) 0%, transparent 70%),
+    radial-gradient(90% 90% at 80% 110%, color-mix(in srgb, var(--warna) 45%, #12030a) 0%, transparent 70%),
+    color-mix(in srgb, var(--warna) 80%, #2a0612);
+}
+
+.sampul p {
+  margin: 0;
+}
+
+.sampul .sampul-atas {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sampul-nama {
+  font-size: clamp(2rem, 3.4vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.sampul .sampul-info {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+.sampul .sampul-info + .sampul-info {
+  margin-top: 0.15rem;
+  opacity: 0.8;
+}
+
+@media (max-width: 640px) {
+  .lg-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lg-price {
+    text-align: left;
+  }
+
+  .lg-row > .lg-members,
+  .lg-actions {
+    grid-column: 1;
+  }
+
+  .lg-actions {
+    justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-form {
+    animation: none;
+  }
+}

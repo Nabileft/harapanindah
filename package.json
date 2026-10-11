@@ -1,0 +1,11 @@
+{
+  "name": "tongkrongan",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "pnpm --filter @tongkrongan/web dev",
+    "build": "pnpm --filter @tongkrongan/web build",
+    "preview": "pnpm --filter @tongkrongan/web preview",
+    "lint": "pnpm --filter @tongkrongan/web lint"
+  }
+}
