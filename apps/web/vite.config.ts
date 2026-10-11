@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/',
   plugins: [react(), tailwindcss()],
   build: {
     // Library peta (MapLibre) memang besar, tapi baru dimuat saat section peta hampir terlihat.
